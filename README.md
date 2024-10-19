@@ -1,6 +1,14 @@
-## Copy this code base
+## Quick start up link
+https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates
+
+## Configure your local environment
+https://docs.amplify.aws/react/start/account-setup/
 
 
+
+## Copy this code base for pretty ui I have set before you.
+
+```
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { useAuthenticator } from '@aws-amplify/ui-react';
@@ -75,3 +83,4 @@ function App() {
 }
 
 export default App;
+```
