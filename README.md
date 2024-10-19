@@ -1,25 +1,77 @@
-## AWS Amplify React+Vite Starter Template
+## Copy this code base
 
-This repository provides a starter template for creating applications using React+Vite and AWS Amplify, emphasizing easy setup for authentication, API, and database capabilities.
 
-## Overview
+import { useEffect, useState } from "react";
+import type { Schema } from "../amplify/data/resource";
+import { useAuthenticator } from '@aws-amplify/ui-react';
+import { generateClient } from "aws-amplify/data";
 
-This template equips you with a foundational React application integrated with AWS Amplify, streamlined for scalability and performance. It is ideal for developers looking to jumpstart their project with pre-configured AWS services like Cognito, AppSync, and DynamoDB.
+const client = generateClient<Schema>();
 
-## Features
+function App() {
+  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const [newTodoContent, setNewTodoContent] = useState(""); 
+  const [isFormVisible, setIsFormVisible] = useState(false); 
+  const { user } = useAuthenticator();
 
-- **Authentication**: Setup with Amazon Cognito for secure user authentication.
-- **API**: Ready-to-use GraphQL endpoint with AWS AppSync.
-- **Database**: Real-time database powered by Amazon DynamoDB.
+  useEffect(() => {
+    client.models.Todo.observeQuery().subscribe({
+      next: (data) => setTodos([...data.items]),
+    });
+  }, []);
 
-## Deploying to AWS
+  async function createTodo(e: React.FormEvent) {
+    e.preventDefault(); 
+    if (newTodoContent.trim()) {
+      await client.models.Todo.create({ content: newTodoContent });
+      setNewTodoContent(""); 
+      setIsFormVisible(false); 
+    }
+  }
 
-For detailed instructions on deploying your application, refer to the [deployment section](https://docs.amplify.aws/react/start/quickstart/#deploy-a-fullstack-app-to-aws) of our documentation.
+  function getUsernameFromEmail(email: string) {
+    email = email.split('@')[0];
+    return email.charAt(0).toUpperCase() + email.slice(1);
+  }  
 
-## Security
+  return (
+    <main>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h1>{getUsernameFromEmail(user?.signInDetails?.loginId)}'s todos</h1>
+      </div>
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>My todos</h1>
+        <button onClick={() => setIsFormVisible(!isFormVisible)}>
+          {isFormVisible ? 'Hide Form' : '+'} 
+        </button> 
+      </div>
 
-## License
+      {isFormVisible && (
+        <form onSubmit={createTodo} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <input 
+            type="text" 
+            placeholder="Enter new todo..." 
+            value={newTodoContent} 
+            onChange={(e) => setNewTodoContent(e.target.value)} 
+            style={{ marginRight: '0.5rem' }}
+          />
+          <button style={{ backgroundColor: 'blue'}} type="submit">Save Todo</button>
+        </form>
+      )}
 
-This library is licensed under the MIT-0 License. See the LICENSE file.
+      <ul>
+        {todos.map((todo) => (
+          <li
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}
+            key={todo.id}
+          >
+            {todo.content}
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+
+export default App;
